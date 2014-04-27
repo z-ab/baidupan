@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/lunny/xorm"
-	//	"io/ioutil"
-	//	"net/http"
 	"runtime"
 	"strconv"
 	"strings"
@@ -20,6 +19,7 @@ var ch chan string
 var ch1 chan int
 
 func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	engine, dberr = xorm.NewEngine("mysql", "root:root@tcp(127.0.0.1:3306)/res?charset=utf8")
 	//engine.ShowSQL = true
 	if dberr != nil {
@@ -29,18 +29,30 @@ func init() {
 	//defer engine.Close()
 }
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	//for {
-	ReqFollow() //获取用户
-	time.Sleep(time.Second * 5)
-	//}
+	do := flag.String("do", "uk", "命令默认uk（获取百度用户的uk），其他命令ip（获取代理ip）,res(获取百度共享资源)")
+	flag.Parse()
+	switch *do {
+	case "uk":
+		ReqFollow()
+	case "ip":
+		CrawlIpUrl()
+	case "res":
+		ObRes()
+	default:
+		fmt.Println("command is not right ,use -h or use -help")
+	}
 
-	//Veriip()
-	Obuk()
+	////for {
+	//ReqFollow() //获取用户
+	//time.Sleep(time.Second * 5)
+	////}
+
+	////Veriip()
+	//Obuk()
 	//Crawresstart()
 }
 
-func Obuk() {
+func ObRes() {
 	sql := "select * from buk where `state`=1 and share>100 order by `share`  "
 	result, err := engine.Query(sql)
 	if err != nil {
@@ -53,14 +65,11 @@ func Obuk() {
 	ch = make(chan string, 20)
 	for _, v := range result {
 		url := "http://yun.baidu.com/pcloud/feed/getsharelist?t=1396440785121&category=0&auth_type=1&start=0&limit=60&query_uk=" + string(v["uk"])
-		//fmt.Println(string(v["uk"]))
 		go Crawresstart(url)
 
 		<-ch
 
 		engine.Exec("update buk set `state`=2 where `uk`=?", v["uk"])
-		//break
-		//engine.Exec("update `ip` set status=2 , updatetime=?, consume=? where `ip`=?", time.Now().Unix(), s, string(v["ip"]))
 	}
 
 }
@@ -83,7 +92,6 @@ func Crawlres(url string) int {
 		fmt.Println(err)
 		return -1
 	}
-	//fmt.Println(string(b))
 	var res Res
 	json.Unmarshal(b, &res)
 	if res.Total_count == 0 {
@@ -101,7 +109,6 @@ func Crawlres(url string) int {
 				}
 			}
 		}
-		//fmt.Println(c)
 	}
 	return res.Total_count
 }

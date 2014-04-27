@@ -43,7 +43,7 @@ func Veriip() {
 	}
 }
 
-func Crawlurl() {
+func CrawlIpUrl() {
 	ipurl := ""
 	id := "1873"
 	for i := 0; i < 11; i++ {
@@ -58,13 +58,6 @@ func Crawlurl() {
 	}
 }
 func Crawlip(ipurl string) {
-	//engine, err := xorm.NewEngine("mysql", "root:root@tcp(10.33.3.222:3306)/res?charset=utf8")
-	////engine.ShowSQL = true
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//defer engine.Close()
 	var doc *goquery.Document
 	var e error
 
@@ -85,9 +78,7 @@ func Crawlip(ipurl string) {
 			if ipstr != "" {
 				retip := strings.Split(strings.Replace(strings.Replace(ipstr, "@", "||", -1), "#", "||", -1), "||")
 				fmt.Println(retip)
-				//break
 				engine.Exec(sql, retip[0], retip[2], time.Now().Unix())
-
 			}
 		}
 	})
